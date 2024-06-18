@@ -1,4 +1,4 @@
-module github.com/clamoriniere/crd-to-markdown
+module github.com/fao89/crd-to-adoc
 
 go 1.13
 

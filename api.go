@@ -69,11 +69,10 @@ func toSectionLink(name string) string {
 }
 
 func printTOC(conf *Config, types []KubeTypes) {
-	//fmt.Printf("\n## Table of Contents\n"
-	fmt.Printf("\n### Custom Resources\n\n")
+	fmt.Printf("[#custom-resources]\n== Custom Resources\n\n")
 	printTypesTOC(types, conf.CRDNames.Find)
 
-	fmt.Printf("\n### Sub Resources\n\n")
+	fmt.Printf("\n[#sub-resources]\n=== Sub Resources\n\n")
 	notFindFunc := func(val string) bool { return !conf.CRDNames.Find(val) }
 	printTypesTOC(types, notFindFunc)
 }
@@ -84,7 +83,7 @@ func printTypesTOC(types []KubeTypes, testFunc func(string) bool) {
 		strukt := t[0]
 		if len(t) > 1 {
 			if testFunc(strukt.Name) {
-				fmt.Printf("* [%s](#%s)\n", strukt.Name, toSectionLink(strukt.Name))
+				fmt.Printf("* <<%s,%s>>\n", toSectionLink(strukt.Name), strukt.Name)
 			}
 		}
 	}
@@ -124,7 +123,7 @@ func printAPIDocs(conf *Config) error {
 	types := ParseDocumentationFrom(conf.TypeFiles)
 	for _, t := range types {
 		strukt := t[0]
-		selfLinks[strukt.Name] = "#" + strings.ToLower(strukt.Name)
+		selfLinks[strukt.Name] = strings.ToLower(strukt.Name)
 	}
 
 	// we need to parse once more to now add the self links
@@ -135,16 +134,19 @@ func printAPIDocs(conf *Config) error {
 	for _, t := range types {
 		strukt := t[0]
 		if len(t) > 1 {
-			fmt.Printf("\n#### %s\n\n%s\n\n", strukt.Name, strukt.Doc)
+			fmt.Printf("\n[#%s]\n==== %s\n\n%s\n\n", toSectionLink(strukt.Name), strukt.Name, strukt.Doc)
 
-			fmt.Println("| Field | Description | Scheme | Required |")
-			fmt.Println("| ----- | ----------- | ------ | -------- |")
-			fields := t[1:(len(t))]
+			fmt.Println("|===\n| Field | Description | Scheme | Required")
+			fields := t[1:]
+
 			for _, f := range fields {
-				fmt.Println("|", f.Name, "|", f.Doc, "|", f.Type, "|", f.Mandatory, "|")
+				fmt.Println("\n|", f.Name)
+				doc := fmt.Sprintf("| %s", f.Doc)
+				fmt.Println(strings.TrimSpace(doc))
+				fmt.Println("|", f.Type)
+				fmt.Println("|", f.Mandatory)
 			}
-			fmt.Println("")
-			fmt.Println("[Back to Custom Resources](#custom-resources)")
+			fmt.Println("|===\n\n<<custom-resources,Back to Custom Resources>>")
 		}
 	}
 
@@ -266,7 +268,7 @@ func toLink(typeName string) string {
 }
 
 func wrapInLink(text, link string) string {
-	return fmt.Sprintf("[%s](%s)", text, link)
+	return fmt.Sprintf("<<%s,%s>>", link, text)
 }
 
 // fieldName returns the name of the field as it should appear in JSON format
