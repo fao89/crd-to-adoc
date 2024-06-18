@@ -134,7 +134,8 @@ func printAPIDocs(conf *Config) error {
 	for _, t := range types {
 		strukt := t[0]
 		if len(t) > 1 {
-			fmt.Printf("\n[#%s]\n==== %s\n\n%s\n\n", toSectionLink(strukt.Name), strukt.Name, strukt.Doc)
+			sectionLink := toSectionLink(strukt.Name)
+			fmt.Printf("\n[#%s]\n==== %s\n\n%s\n\n", sectionLink, strukt.Name, strukt.Doc)
 
 			fmt.Println("|===\n| Field | Description | Scheme | Required")
 			fields := t[1:]
@@ -171,6 +172,7 @@ type KubeTypes []Pair
 // struct definitions that have no documentation as {name, ""}.
 func ParseDocumentationFrom(srcs []string) []KubeTypes {
 	var docForTypes []KubeTypes
+	tracker := make(map[string]bool)
 
 	for _, src := range srcs {
 		pkg := astFrom(src)
@@ -178,6 +180,11 @@ func ParseDocumentationFrom(srcs []string) []KubeTypes {
 		for _, kubType := range pkg.Types {
 			if structType, ok := kubType.Decl.Specs[0].(*ast.TypeSpec).Type.(*ast.StructType); ok {
 				var ks KubeTypes
+				if _, ok := tracker[kubType.Name]; !ok {
+					tracker[kubType.Name] = true
+				} else {
+					continue
+				}
 				ks = append(ks, Pair{kubType.Name, fmtRawDoc(kubType.Doc), "", false})
 
 				for _, field := range structType.Fields.List {
