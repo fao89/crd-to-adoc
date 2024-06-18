@@ -271,6 +271,19 @@ func toLink(typeName string) string {
 		return wrapInLink(typeName, link)
 	}
 
+	if strings.Contains(typeName, ".") {
+		typeString := strings.Split(typeName, ".")[1]
+		selfLink, hasSelfLink := selfLinks[typeString]
+		if hasSelfLink {
+			return wrapInLink(typeString, selfLink)
+		}
+
+		link, hasLink := links[typeString]
+		if hasLink {
+			return wrapInLink(typeString, link)
+		}
+	}
+
 	return typeName
 }
 
